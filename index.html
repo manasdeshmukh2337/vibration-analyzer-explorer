@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VIBRO/LAB · Vibration Analyzer Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17202f;--paper:#fffdf6;--cream:#f7f3e6;--red:#d63a2b;--orange:#c8632b;--teal:#14899b;--mut:#5b6575}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--cream);display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:2px solid var(--ink);background:var(--paper);flex:none}
+.logo{font:900 24px/1 Archivo,sans-serif;letter-spacing:-.8px}.logo i{font-style:normal;color:var(--red)}
+.pill{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.8px;background:var(--ink);color:#fff;padding:4px 8px}
+header h1{font:800 15px Archivo,sans-serif;margin-left:auto;text-align:right}
+main{flex:1;display:flex;min-height:0}
+#stage{position:relative;flex:1;min-width:0;background-color:var(--cream);
+  background-image:linear-gradient(rgba(23,32,47,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(23,32,47,.06) 1px,transparent 1px);background-size:20px 20px;touch-action:none}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
+#dots{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.dot{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#fff;border:2px solid var(--ink);font:800 11px Archivo,sans-serif;display:flex;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer;transition:transform .12s,background .12s}
+.dot.core{border-color:var(--orange)}.dot:hover{transform:scale(1.2)}.dot.on{background:var(--ink);color:#fff}.dot.dim{opacity:.35}
+#hud{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap}
+button{font:600 12px Inter,sans-serif;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);padding:8px 12px;cursor:pointer;border-radius:0}
+button:hover{background:#fff}button.pri{background:var(--ink);color:#fff}button.act{background:var(--orange);border-color:var(--orange);color:#fff}
+#ex{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:12px;background:rgba(255,253,246,.94);border:1.5px solid var(--ink);padding:8px 12px}
+#ex label{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.8px;color:var(--mut);white-space:nowrap}
+#ex input{flex:1;accent-color:var(--orange);min-width:0}
+#ex span{font:600 10px 'IBM Plex Mono',monospace;width:38px;text-align:right}
+aside{width:360px;flex:none;border-left:2px solid var(--ink);background:var(--paper);display:flex;flex-direction:column;min-height:0}
+#info{padding:14px 16px;border-bottom:1.5px solid var(--ink);flex:none}
+.tag{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.9px;color:var(--red)}
+#info h2{font:800 20px/1.1 Archivo,sans-serif;margin:5px 0 7px;letter-spacing:-.3px}
+#info p{font-size:12.5px;line-height:1.5;color:#273142}
+#info .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+#info small{display:block;margin-top:8px;font:500 9.5px 'IBM Plex Mono',monospace;color:var(--mut)}
+.opts{display:flex;gap:14px;padding:9px 16px;border-bottom:1.5px solid var(--ink);flex:none;font-size:12px;flex-wrap:wrap}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}.opts input{accent-color:var(--orange)}
+#list{list-style:none;overflow:auto;flex:1;padding:6px 8px 14px}
+#list li{display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px dashed #cfd5df;cursor:pointer;font-size:13px}
+#list li:hover{background:#fff}#list li.on{background:#fff4dc}
+#list .n{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font:800 11px Archivo,sans-serif;flex:none;background:#fff}
+#list .core .n{border-color:var(--orange)}#list b{font-weight:600}#list em{font-style:normal;font:500 9px 'IBM Plex Mono',monospace;color:var(--orange);margin-left:4px}
+#ar{position:absolute;right:12px;top:12px}
+#arcard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 28px));background:var(--paper);border:2px solid var(--ink);padding:18px 20px;display:none;z-index:5;box-shadow:6px 6px 0 var(--ink)}
+#arcard.show{display:block}
+#arcard .tag{color:var(--red)}#arcard h2{font:900 26px/1.05 Archivo,sans-serif;letter-spacing:-.6px;margin:6px 0 8px}
+#arcard ol{margin:8px 0 12px 20px;font-size:13px;line-height:1.55}#arcard p{font-size:11.5px;color:var(--mut);margin-top:10px;line-height:1.45}
+#toast{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:12px;padding:9px 14px;max-width:calc(100% - 24px);display:none;z-index:6;line-height:1.4}
+#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:1px;color:var(--mut)}
+@media (max-width:820px){
+  body{overflow:auto}main{flex-direction:column}#stage{flex:none;height:62vh}
+  aside{width:100%;border-left:0;border-top:2px solid var(--ink)}#list{overflow:visible}header h1{display:none}#ar{top:auto;bottom:64px}#hud button{padding:7px 9px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<header><div class="logo">VIBRO<i>LAB</i></div><div class="pill">DRG. NO. VA-001</div><h1>Vibration Analyzer · 3D Explorer</h1></header>
+<main>
+  <div id="stage">
+    <canvas id="c" tabindex="0"></canvas>
+    <div id="dots"></div>
+    <div id="loading">LOADING MODEL…</div>
+    <div id="hud"><button id="bReset">Reset view</button><button id="bSpin">Auto-rotate</button><button id="bChain" class="pri">▶ Play signal chain</button></div>
+    <button id="ar" class="pri">View in AR</button>
+    <div id="arcard">
+      <div class="tag">CODE 1 · AUGMENTED REALITY</div><h2>The analyzer, on your bench</h2>
+      <ol><li>Tap <b>View in your space</b>.</li><li>Move the phone slowly over a table or floor.</li><li>Walk around it, then come back and use <b>Explode</b> here.</li></ol>
+      <div style="display:flex;gap:8px"><button id="arGo" class="pri">View in your space</button><button id="arClose">Stay in 3D</button></div>
+      <p>Needs an AR-capable phone: Android with Chrome and Google Play Services for AR, or iPhone / iPad with Safari. The camera is requested only when AR starts.</p>
+    </div>
+    <div id="toast"></div>
+    <div id="ex"><label for="exs">EXPLODE</label><input id="exs" type="range" min="0" max="100" value="0"><span id="exv">0%</span></div>
+  </div>
+  <aside>
+    <div id="info"></div>
+    <div class="opts"><label><input type="checkbox" id="iso" checked> Isolate selected part</label></div>
+    <ol id="list"></ol>
+  </aside>
+</main>
+
+<model-viewer id="mv" src="vibration_analyzer.glb" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" alt="Vibration analyzer"
+  style="position:fixed;left:-10px;top:-10px;width:4px;height:4px;opacity:0;pointer-events:none"></model-viewer>
+
+<script type="importmap">
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}
+</script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+/* ---------- component data (numbers match the poster legend, Sheet 1) ---------- */
+const KEYS = Array.from({length:12},(_,i)=>'Key_'+String(i).padStart(2,'0'));
+const PARTS = [
+ {n:1, name:'Accelerometer', core:1, nodes:['Accel_Body','Accel_Hex','Accel_Neck'], text:'Piezoelectric sensor that turns the machine’s vibration acceleration into an electrical signal. Mount it flat and rigid on the bearing housing.'},
+ {n:2, name:'Input connector', core:1, nodes:['Input_Connector','Input_Nut'], text:'Brings the sensor signal into the analyzer. The input is set for the type of sensor used.'},
+ {n:3, name:'Main unit', core:1, nodes:['Body'], text:'Holds the signal conditioning, the analog-to-digital converter and the processor that computes the FFT.'},
+ {n:4, name:'Display', core:1, nodes:['Screen'], text:'Shows the time waveform, the FFT spectrum and overall values such as RMS.'},
+ {n:5, name:'Signal cable', nodes:['Cable'], text:'Shielded cable that carries the small sensor signal to the input connector.'},
+ {n:6, name:'Keypad', nodes:KEYS, text:'Sets range, averaging and storage, and starts or holds a measurement.'},
+ {n:7, name:'Aux port', ill:1, nodes:['Aux_Connector'], text:'Typical place for a tachometer or trigger input to read shaft speed.'},
+ {n:8, name:'Magnetic base', nodes:['Magnet_Base'], text:'Holds the sensor on a steel surface for quick, temporary measurements.'},
+ {n:9, name:'Mounting stud', nodes:['Magnet_Stud'], text:'Screws into the base so the sensor sits flat and rigid on the machine.'},
+ {n:10, name:'Top bumper', nodes:['Bumper_Top'], text:'Rubber boot protecting the connector end of the unit from knocks.'},
+ {n:11, name:'Bottom bumper', nodes:['Bumper_Bottom'], text:'Rubber boot protecting the base of the unit and giving a firm grip.'},
+ {n:12, name:'Screen bezel', nodes:['Screen_Bezel'], text:'Frames the display and keeps it flush with the housing.'},
+];
+const EXPLODE = {Bumper_Top:[0,.075,0],Bumper_Bottom:[0,-.075,0],Screen_Bezel:[0,0,.045],Screen:[0,0,.085],Input_Connector:[0,.075,0],Input_Nut:[0,.05,0],
+ Aux_Connector:[0,.075,0],Accel_Neck:[0,.05,0],Accel_Hex:[0,-.05,0],Cable:[0,0,-.06],Magnet_Stud:[0,.04,0],Magnet_Base:[0,-.04,0]};
+KEYS.forEach(k=>EXPLODE[k]=[0,0,.055]);
+const CHAIN = [
+ {ids:[1], t:'1 · Sense', x:'The accelerometer’s mass presses on a piezoelectric crystal, which makes a charge proportional to the machine’s acceleration.'},
+ {ids:[5,2], t:'2 · Carry', x:'The shielded cable and input connector bring that tiny signal into the analyzer without picking up noise.'},
+ {ids:[3], t:'3 · Process', x:'Inside the main unit the signal is amplified, filtered, sampled by the ADC and turned into a spectrum by the FFT.'},
+ {ids:[4], t:'4 · Display', x:'The display shows the waveform, the spectrum and overall values such as RMS. Match peaks to fault frequencies.'},
+];
+
+/* ---------- scene ---------- */
+const $ = id => document.getElementById(id);
+const canvas = $('c'), stage = $('stage');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(renderer);
+scene.environment = pm.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .75;
+const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(.5,.8,1); scene.add(key);
+const fill = new THREE.DirectionalLight(0xbfd4ff, .45); fill.position.set(-.8,.2,.5); scene.add(fill);
+const camera = new THREE.PerspectiveCamera(26, 1, .01, 20);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = .08; controls.screenSpacePanning = true; controls.autoRotateSpeed = 1.2;
+
+let root, nodes = {}, base = {}, meshOf = {}, centers = {}, home = null;
+let ex = 0, exT = 0, selected = [], chainTimer = null, chainI = 0;
+
+const gltf = await new GLTFLoader().loadAsync('vibration_analyzer.glb');
+root = gltf.scene; scene.add(root);
+root.traverse(o => { if (o.name) nodes[o.name] = o; if (o.isMesh) { o.material = o.material.clone(); o.userData.m0 = {op:o.material.opacity, tr:o.material.transparent, em:o.material.emissive.clone(), ei:o.material.emissiveIntensity}; } });
+for (const n in nodes) base[n] = nodes[n].position.clone();
+const nodeToPart = {}; PARTS.forEach(p => p.nodes.forEach(n => nodeToPart[n] = p));
+$('loading').remove();
+
+function meshesOf(part){ const out=[]; part.nodes.forEach(n => nodes[n] && nodes[n].traverse(o => o.isMesh && out.push(o))); return out; }
+function applyExplode(){
+  for (const n in EXPLODE) if (nodes[n]) nodes[n].position.copy(base[n]).add(new THREE.Vector3(...EXPLODE[n]).multiplyScalar(ex));
+  root.updateMatrixWorld(true);
+  PARTS.forEach(p => { const b = new THREE.Box3(); p.nodes.forEach(n => nodes[n] && b.expandByObject(nodes[n])); centers[p.n] = b.getCenter(new THREE.Vector3()); });
+}
+applyExplode();
+
+function frameAll(dir = new THREE.Vector3(.55,.45,1)){
+  const savedEx = ex; ex = .55; applyExplode();                // frame between assembled and exploded size
+  const box = new THREE.Box3().setFromObject(root), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+  ex = savedEx; applyExplode();
+  const fov = THREE.MathUtils.degToRad(camera.fov), aspect = camera.aspect;
+  const dH = (size.y/2) / Math.tan(fov/2), dW = (size.x/2) / (Math.tan(fov/2) * aspect);
+  const dist = Math.max(dH, dW, .3) * 1.12 + size.z/2;
+  controls.target.copy(c); camera.position.copy(c).add(dir.clone().normalize().multiplyScalar(dist));
+  controls.minDistance = dist * .25; controls.maxDistance = dist * 2.2; controls.update();
+  home = {pos: camera.position.clone(), tgt: controls.target.clone()};
+}
+function resize(){
+  const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(() => { resize(); if (!home) frameAll(); }).observe(stage);
+resize(); frameAll();
+
+/* ---------- UI ---------- */
+const dotsEl = $('dots'), list = $('list');
+PARTS.forEach(p => {
+  const d = document.createElement('div'); d.className = 'dot' + (p.core ? ' core' : ''); d.textContent = p.n; d.dataset.n = p.n; d.onclick = () => userSelect([p.n]); dotsEl.appendChild(d); p.dot = d;
+  const li = document.createElement('li'); li.className = p.core ? 'core' : ''; li.dataset.n = p.n;
+  li.innerHTML = `<span class="n">${p.n}</span><span><b>${p.name}</b>${p.ill ? '<em>illustrative</em>' : ''}</span>`;
+  li.onclick = () => userSelect([p.n]); list.appendChild(li); p.li = li;
+});
+
+function setInfo(html){ $('info').innerHTML = html; }
+function homeInfo(){ setInfo(`<div class="tag">VIBRATION ANALYZER · 12 PARTS</div><h2>Tap any part</h2><p>Click a part in the 3D view, a numbered dot or the list. Drag to rotate, scroll or pinch to zoom, and use <b>Explode</b> to take it apart. Numbers match Sheet 1 of the poster.</p>`); }
+homeInfo();
+
+function paint(){
+  const iso = $('iso').checked, sel = new Set(selected);
+  PARTS.forEach(p => {
+    const on = sel.has(p.n), dim = sel.size && !on && iso;
+    meshesOf(p).forEach(m => {
+      const m0 = m.userData.m0, mat = m.material;
+      mat.transparent = dim ? true : m0.tr; mat.opacity = dim ? .13 : m0.op; mat.depthWrite = !dim;
+      if (on && !mat.emissiveMap) { mat.emissive.set(0xc8632b); mat.emissiveIntensity = .45; }
+      else { mat.emissive.copy(m0.em); mat.emissiveIntensity = m0.ei; }
+      mat.needsUpdate = true;
+    });
+    p.dot.classList.toggle('on', on); p.dot.classList.toggle('dim', !!dim); p.li.classList.toggle('on', on);
+  });
+}
+function select(ids, fromChain){
+  selected = ids; paint();
+  if (!ids.length){ homeInfo(); return; }
+  const parts = ids.map(n => PARTS.find(p => p.n === n));
+  if (!fromChain){
+    const p = parts[0];
+    setInfo(`<div class="tag">ITEM ${p.n} · ${p.core ? 'CORE MEASUREMENT PART' : 'SUPPORTING PART'}${p.ill ? ' · ILLUSTRATIVE' : ''}</div><h2>${p.name}</h2><p>${p.text}</p>
+      <div class="row"><button id="bZoom" class="pri">Zoom to part</button><button id="bClear">Clear</button></div><small>Poster · Sheet 1 · legend item ${p.n}</small>`);
+    $('bZoom').onclick = () => zoomTo(p.n); $('bClear').onclick = () => userSelect([]);
+    p.li.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+}
+function userSelect(ids){ stopChain(); select(ids); }
+$('iso').onchange = paint;
+
+/* picking: ignore drags */
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; stopSpin(); });
+canvas.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return; down = null;
+  const r = canvas.getBoundingClientRect(); ptr.set(((e.clientX - r.left)/r.width)*2-1, -((e.clientY - r.top)/r.height)*2+1);
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObject(root, true).filter(h => h.object.material.opacity > .5);
+  let part = null; for (const h of hits){ let o = h.object; while (o && !nodeToPart[o.name]) o = o.parent; if (o){ part = nodeToPart[o.name]; break; } }
+  userSelect(part ? [part.n] : []);
+});
+canvas.addEventListener('pointermove', e => {
+  if (e.buttons) return; const r = canvas.getBoundingClientRect(); ptr.set(((e.clientX - r.left)/r.width)*2-1, -((e.clientY - r.top)/r.height)*2+1);
+  ray.setFromCamera(ptr, camera); canvas.style.cursor = ray.intersectObject(root, true).length ? 'pointer' : 'grab';
+});
+
+/* camera moves */
+let tween = null;
+function flyTo(pos, tgt){ tween = {p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: tgt, k: 0}; }
+function zoomTo(n){
+  const c = centers[n], dir = camera.position.clone().sub(controls.target).normalize();
+  const b = new THREE.Box3(); PARTS.find(p => p.n === n).nodes.forEach(k => nodes[k] && b.expandByObject(nodes[k]));
+  const s = b.getSize(new THREE.Vector3()).length();
+  flyTo(c.clone().add(dir.multiplyScalar(Math.max(s * 2.4, .09))), c.clone());
+}
+$('bReset').onclick = () => { stopChain(); select([]); flyTo(home.pos.clone(), home.tgt.clone()); exT = 0; $('exs').value = 0; $('exv').textContent = '0%'; };
+function stopSpin(){ controls.autoRotate = false; $('bSpin').classList.remove('act'); }
+$('bSpin').onclick = () => { controls.autoRotate = !controls.autoRotate; $('bSpin').classList.toggle('act', controls.autoRotate); };
+$('exs').oninput = e => { exT = e.target.value / 100; $('exv').textContent = e.target.value + '%'; };
+
+/* signal chain player */
+function showChain(i){
+  const s = CHAIN[i]; select(s.ids, true);
+  setInfo(`<div class="tag">SIGNAL CHAIN · STAGE ${i+1} OF ${CHAIN.length}</div><h2>${s.t}</h2><p>${s.x}</p><div class="row"><button id="bNext" class="pri">Next stage</button><button id="bStop">Stop</button></div>`);
+  $('bNext').onclick = () => { clearTimeout(chainTimer); chainI = (chainI + 1) % CHAIN.length; showChain(chainI); schedule(); }; $('bStop').onclick = () => userSelect([]);
+  const c = s.ids.map(n => centers[n]).reduce((a, v) => a.add(v), new THREE.Vector3()).multiplyScalar(1 / s.ids.length);
+  const dir = camera.position.clone().sub(controls.target).normalize(), d = camera.position.distanceTo(controls.target);
+  flyTo(c.clone().add(dir.multiplyScalar(Math.min(d, Math.max(.2, d * .7)))), c);
+}
+function schedule(){ chainTimer = setTimeout(() => { chainI = (chainI + 1) % CHAIN.length; showChain(chainI); schedule(); }, 4500); }
+function stopChain(){ clearTimeout(chainTimer); chainTimer = null; $('bChain').textContent = '▶ Play signal chain'; $('bChain').classList.add('pri'); }
+$('bChain').onclick = () => {
+  if (chainTimer){ stopChain(); select([]); return; }
+  stopSpin(); chainI = 0; showChain(0); schedule(); $('bChain').textContent = '■ Stop signal chain'; $('bChain').classList.remove('pri');
+};
+
+/* AR (model-viewer does the heavy lifting) */
+const mv = $('mv'), toast = $('toast');
+function say(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(say.t); say.t = setTimeout(() => toast.style.display = 'none', 6000); }
+function tryAR(){
+  if (mv.canActivateAR) mv.activateAR();
+  else say('AR needs a phone with ARCore (Android + Chrome) or an iPhone / iPad with Safari. You are in the 3D view instead.');
+}
+$('ar').onclick = () => { $('arcard').classList.add('show'); };
+$('arGo').onclick = () => { tryAR(); };
+$('arClose').onclick = () => { $('arcard').classList.remove('show'); if (location.hash === '#ar') history.replaceState(null, '', location.pathname); };
+if (location.hash === '#ar') $('arcard').classList.add('show');
+addEventListener('hashchange', () => { if (location.hash === '#ar') $('arcard').classList.add('show'); });
+
+/* render loop */
+const tmp = new THREE.Vector3();
+renderer.setAnimationLoop(() => {
+  if (Math.abs(exT - ex) > .0005){ ex += (exT - ex) * .12; applyExplode(); } else if (ex !== exT){ ex = exT; applyExplode(); }
+  if (tween){ tween.k = Math.min(1, tween.k + .045); const e = tween.k * tween.k * (3 - 2 * tween.k);
+    camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e); if (tween.k >= 1) tween = null; }
+  controls.update(); renderer.render(scene, camera);
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const pos = PARTS.map(p => { tmp.copy(centers[p.n]).project(camera); return [(tmp.x * .5 + .5) * w, (-tmp.y * .5 + .5) * h, tmp.z > 1]; });
+  for (let it = 0; it < 3; it++) for (let i = 0; i < pos.length; i++) for (let j = i + 1; j < pos.length; j++) {   // keep numbered dots from stacking on each other
+    let dx = pos[j][0] - pos[i][0], dy = pos[j][1] - pos[i][1], d = Math.hypot(dx, dy);
+    if (d < 26){ if (d < .5){ const a = j * 2.4; dx = Math.cos(a); dy = Math.sin(a); d = 1; } const k = (26 - d) / 2 / d; pos[j][0] += dx * k; pos[j][1] += dy * k; pos[i][0] -= dx * k; pos[i][1] -= dy * k; }
+  }
+  PARTS.forEach((p, i) => { p.dot.style.display = pos[i][2] ? 'none' : 'flex'; p.dot.style.left = pos[i][0] + 'px'; p.dot.style.top = pos[i][1] + 'px'; });
+});
+window.__ready = true;
+</script>
+</body>
+</html>
